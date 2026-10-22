@@ -1,0 +1,98 @@
+
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'BUILD_DOCKER',
+            choices: ['NO', 'YES'],
+            description: 'Choose YES to build the Docker image or NO to skip it.'
+        )
+    }
+
+    stages {
+        stage('Checkout Latest Code') {
+            steps {
+                checkout scm
+                echo 'Latest code checked out from GitHub.'
+            }
+        }
+
+        stage('Parallel Tests') {
+            parallel {
+                stage('Validate Files') {
+                    steps {
+                        script {
+                            if (!fileExists('index.html')) {
+                                error('index.html is missing')
+                            }
+
+                            if (!fileExists('Dockerfile')) {
+                                error('Dockerfile is missing')
+                            }
+
+                            if (!fileExists('Jenkinsfile-Q2/Jenkinsfile')) {
+                                error('Question 2 Jenkinsfile is missing')
+                            }
+                        }
+
+                        echo 'File validation passed.'
+                    }
+                }
+
+                stage('Test Dashboard') {
+                    steps {
+                        script {
+                            def html = readFile('index.html')
+
+                            if (!html.contains('Intersection Monitoring')) {
+                                error('Intersection monitoring test failed')
+                            }
+
+                            if (!html.contains('Central Junction')) {
+                                error('Central Junction test failed')
+                            }
+
+                            if (!html.contains('Traffic Diversion and Advisories')) {
+                                error('Traffic diversion test failed')
+                            }
+                        }
+
+                        echo 'Dashboard tests passed.'
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            when {
+                expression {
+                    params.BUILD_DOCKER == 'YES'
+                }
+            }
+
+            steps {
+                bat '"C:/Users/K Md Suhail/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe" build -t assessment-10 .'
+            }
+        }
+
+        stage('Archive Build Artifacts') {
+            steps {
+                archiveArtifacts(
+                    artifacts: 'index.html,Dockerfile,Jenkinsfile-Q2/Jenkinsfile',
+                    fingerprint: true
+                )
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Question 2 pipeline completed successfully.'
+        }
+
+        failure {
+            echo 'Pipeline failed. Check Console Output.'
+        }
+    }
+}
