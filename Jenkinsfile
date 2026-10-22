@@ -55,11 +55,11 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t intelligent-traffic-management:latest .'
-            }
-        }
+       stage('Build Docker Image') {
+    steps {
+        bat 'docker build -t assessment-10 .'
+    }
+}
     }
 
     post {
