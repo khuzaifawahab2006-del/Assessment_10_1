@@ -1,1 +1,424 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Traffic Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            text-align: center;
+            padding: 24px 15px;
+        }
+
+        header h1 {
+            margin: 0 0 10px;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 18px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 15px;
+        }
+
+        .card, .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+
+        .number {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 12px;
+            color: #1d4ed8;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin: 22px 0;
+        }
+
+        select, button {
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #1d4ed8;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e40af;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        th, td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #e2e8f0;
+        }
+
+        .low {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .moderate {
+            color: #a16207;
+            font-weight: bold;
+        }
+
+        .high, .critical, .alert {
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        .normal {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .panel {
+            margin-top: 22px;
+        }
+
+        .notice {
+            padding: 12px;
+            margin: 10px 0;
+            border-left: 4px solid #d97706;
+            background: #fffbeb;
+            border-radius: 4px;
+        }
+
+        .emergency {
+            border-left-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .success {
+            border-left-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Intelligent Traffic Management System</h1>
+    <p>Smart City Traffic Monitoring and Congestion Control</p>
+</header>
+
+<main>
+
+    <section class="summary">
+        <div class="card">
+            Total Vehicles Monitored
+            <div class="number" id="totalVehicles">0</div>
+        </div>
+
+        <div class="card">
+            Average Waiting Time
+            <div class="number" id="averageWait">0 s</div>
+        </div>
+
+        <div class="card">
+            Most Congested Intersection
+            <div class="number" id="mostCongested">-</div>
+        </div>
+
+        <div class="card">
+            Active Road Closures
+            <div class="number" id="closureCount">0</div>
+        </div>
+    </section>
+
+    <section class="controls">
+        <label for="filter">Filter by congestion:</label>
+
+        <select id="filter">
+            <option value="All">All Levels</option>
+            <option value="Low">Low</option>
+            <option value="Moderate">Moderate</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+        </select>
+
+        <button id="refresh">Refresh Dashboard</button>
+    </section>
+
+    <section class="panel">
+        <h2>Intersection Monitoring</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Intersection ID</th>
+                        <th>Location</th>
+                        <th>Vehicles</th>
+                        <th>Waiting Time</th>
+                        <th>Signal Status</th>
+                        <th>Congestion</th>
+                        <th>Alert</th>
+                    </tr>
+                </thead>
+
+                <tbody id="trafficTable"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Traffic Diversion and Advisories</h2>
+        <div id="advisories"></div>
+    </section>
+
+    <section class="panel">
+        <h2>Recommended Signal Timing Adjustments</h2>
+        <div id="recommendations"></div>
+    </section>
+
+</main>
+
+<footer>
+    Traffic data is simulated for academic purposes.
+</footer>
+
+<script>
+    const intersections = [
+        {
+            id: "INT-01",
+            location: "City Centre",
+            vehicles: 85,
+            wait: 45,
+            signal: "Green",
+            congestion: "Low",
+            closure: false,
+            emergency: false,
+            affectedRoad: "Main Street",
+            diversion: "Use Main Street"
+        },
+        {
+            id: "INT-02",
+            location: "Central Junction",
+            vehicles: 160,
+            wait: 135,
+            signal: "Red",
+            congestion: "Critical",
+            closure: false,
+            emergency: true,
+            affectedRoad: "Central Road",
+            diversion: "Give priority to emergency vehicles"
+        },
+        {
+            id: "INT-03",
+            location: "Market Road",
+            vehicles: 120,
+            wait: 95,
+            signal: "Red",
+            congestion: "High",
+            closure: true,
+            emergency: false,
+            affectedRoad: "Market Street",
+            diversion: "Use Riverside Road"
+        },
+        {
+            id: "INT-04",
+            location: "Railway Junction",
+            vehicles: 105,
+            wait: 70,
+            signal: "Green",
+            congestion: "Moderate",
+            closure: false,
+            emergency: false,
+            affectedRoad: "Station Road",
+            diversion: "Normal traffic movement"
+        },
+        {
+            id: "INT-05",
+            location: "Airport Road",
+            vehicles: 145,
+            wait: 125,
+            signal: "Red",
+            congestion: "High",
+            closure: false,
+            emergency: false,
+            affectedRoad: "Airport Road",
+            diversion: "Consider the alternate airport route"
+        }
+    ];
+
+    function renderDashboard() {
+        const selectedLevel =
+            document.getElementById("filter").value;
+
+        const visibleIntersections = intersections.filter(item =>
+            selectedLevel === "All" ||
+            item.congestion === selectedLevel
+        );
+
+        document.getElementById("trafficTable").innerHTML =
+            visibleIntersections.map(item => `
+                <tr>
+                    <td>${item.id}</td>
+                    <td>${item.location}</td>
+                    <td>${item.vehicles}</td>
+                    <td>${item.wait} seconds</td>
+                    <td>${item.signal}</td>
+                    <td class="${item.congestion.toLowerCase()}">
+                        ${item.congestion}
+                    </td>
+                    <td class="${item.wait > 120 ? "alert" : "normal"}">
+                        ${item.wait > 120
+                            ? "Waiting time exceeded 120 seconds"
+                            : "Normal"}
+                    </td>
+                </tr>
+            `).join("");
+
+        const totalVehicles = intersections.reduce(
+            (sum, item) => sum + item.vehicles, 0
+        );
+
+        const averageWait = intersections.reduce(
+            (sum, item) => sum + item.wait, 0
+        ) / intersections.length;
+
+        const mostCongested = [...intersections].sort(
+            (a, b) => b.vehicles - a.vehicles
+        )[0];
+
+        document.getElementById("totalVehicles").textContent =
+            totalVehicles;
+
+        document.getElementById("averageWait").textContent =
+            averageWait.toFixed(1) + " s";
+
+        document.getElementById("mostCongested").textContent =
+            mostCongested.id;
+
+        document.getElementById("closureCount").textContent =
+            intersections.filter(item => item.closure).length;
+
+        const advisories = [];
+
+        intersections.forEach(item => {
+            if (item.closure) {
+                advisories.push(`
+                    <div class="notice">
+                        <strong>Road Closure:</strong>
+                        ${item.affectedRoad} is closed in the simulation.
+                        ${item.diversion}.
+                    </div>
+                `);
+            }
+
+            if (item.emergency) {
+                advisories.push(`
+                    <div class="notice emergency">
+                        <strong>Emergency Priority:</strong>
+                        Emergency vehicle priority is required at
+                        ${item.location}. Coordinate a safe signal change.
+                    </div>
+                `);
+            }
+
+            if (item.wait > 120) {
+                advisories.push(`
+                    <div class="notice emergency">
+                        <strong>Congestion Alert:</strong>
+                        ${item.location} has a waiting time of
+                        ${item.wait} seconds.
+                    </div>
+                `);
+            }
+        });
+
+        document.getElementById("advisories").innerHTML =
+            advisories.join("") ||
+            "<p>No active advisories.</p>";
+
+        const recommendations = intersections.filter(item =>
+            item.congestion === "High" ||
+            item.congestion === "Critical"
+        );
+
+        document.getElementById("recommendations").innerHTML =
+            recommendations.map(item => `
+                <div class="notice">
+                    <strong>${item.id} - ${item.location}</strong><br>
+                    ${
+                        item.emergency
+                            ? "Prioritize the emergency vehicle and coordinate a safe signal change."
+                            : "Consider extending the green signal by 15 seconds after reviewing cross-traffic."
+                    }
+                    <br>
+                    Diversion advisory: ${item.diversion}.
+                </div>
+            `).join("") ||
+            "<p>No signal adjustments required.</p>";
+    }
+
+    document.getElementById("filter").addEventListener(
+        "change", renderDashboard
+    );
+
+    document.getElementById("refresh").addEventListener(
+        "click", renderDashboard
+    );
+
+    renderDashboard();
+</script>
+
+</body>
+</html>
+
